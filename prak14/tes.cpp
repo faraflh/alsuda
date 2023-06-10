@@ -1,64 +1,102 @@
 #include <iostream>
-#include <limits>
-#define N 6
-#define INF 1000
+#include <stack>
+#define N 5
+#define M 1000
+using namespace std;
 
-void Warshall(int graph[N][N], int dist[N][N], int path[N][N]) {
-    // Initialize the distance and path matrices
+// Function to display a matrix
+void Tampil(int data[N][N], const string& judul) {
+    cout << judul << " = \n";
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
-            dist[i][j] = graph[i][j];
-            if (i == j || graph[i][j] == INF)
-                path[i][j] = -1;
+            if (data[i][j] >= M)
+                cout << "M ";
             else
-                path[i][j] = i;
+                cout << data[i][j] << " ";
         }
+        cout << "\n";
     }
+}
 
-    // Perform the Warshall's algorithm
+// Warshall's algorithm for finding the shortest paths
+void Warshall(int Q[N][N], int P[N][N], int R[N][N]) {
     for (int k = 0; k < N; k++) {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                if (dist[i][k] != INF && dist[k][j] != INF && dist[i][k] + dist[k][j] < dist[i][j]) {
-                    dist[i][j] = dist[i][k] + dist[k][j];
-                    path[i][j] = path[k][j];
+                P[i][j] = P[i][j] | (P[i][k] & P[k][j]);
+                if ((Q[i][k] + Q[k][j]) < Q[i][j]) {
+                    Q[i][j] = Q[i][k] + Q[k][j];
+                    if (R[k][j] == 0)
+                        R[i][j] = k + 1;
+                    else
+                        R[i][j] = R[k][j];
                 }
             }
         }
     }
 }
 
-void FindRoute(int start, int end, int path[N][N]) {
-    if (path[start][end] == -1) {
-        std::cout << "No route exists from " << start << " to " << end << std::endl;
-        return;
+// Function to find and display the route
+void FindRoute(int start, int end, int R[N][N]) {
+    stack<int> routeStack;
+    routeStack.push(end);
+
+    while (start != end) {
+        end = R[start - 1][end - 1];
+        routeStack.push(end);
     }
 
-    std::cout << "Shortest route from " << start << " to " << end << ": ";
-    std::cout << start;
-    while (start != end) {
-        start = path[start][end];
-        std::cout << " -> " << start;
+    while (!routeStack.empty()) {
+        cout << routeStack.top();
+        routeStack.pop();
+        if (!routeStack.empty())
+            cout << "-";
     }
-    std::cout << std::endl;
+    
 }
 
 int main() {
-    int graph[N][N] = {{INF, 4, 2, INF, INF, INF},
-                       {4, INF, 1, 5, INF, INF},
-                       {2, 1, INF, 8, 10, INF},
-                       {INF, 5, 8, INF, 2, 6},
-                       {INF, INF, 10, 2, INF, 3},
-                       {INF, INF, INF, 6, 3, INF}};
+    int Beban[N][N] = {{M, 1, 3, M, M},
+                       {M, M, 1, M, 5},
+                       {3, M, M, 2, M},
+                       {M, M, M, M, 1},
+                       {M, M, M, M, M}};
 
-    int dist[N][N];
-    int path[N][N];
+    int Jalur[N][N] = {{0, 1, 1, 0, 0},
+                       {0, 0, 1, 0, 1},
+                       {1, 0, 0, 1, 0},
+                       {0, 0, 0, 0, 1},
+                       {0, 0, 0, 0, 0}};
 
-    Warshall(graph, dist, path);
+    int Rute[N][N] = {{M, 0, 0, M, M},
+                      {M, M, 0, M, 0},
+                      {0, M, M, 0, M},
+                      {M, M, M, M, 0},
+                      {M, M, M, M, M}};
 
-    int start = 1;
-    int end = 5;
-    FindRoute(start, end, path);
+    Tampil(Beban, "Beban");
+    Tampil(Jalur, "Jalur");
+    Tampil(Rute, "Rute");
+
+    Warshall(Beban, Jalur, Rute);
+
+    cout << "Matriks setelah Algoritma Warshall : \n";
+    Tampil(Beban, "Beban");
+    Tampil(Jalur, "Jalur");
+    Tampil(Rute, "Rute");
+
+    int start, end;
+    cout << "Masukkan simpul awal (1-6): ";
+    cin >> start;
+    cout << "Masukkan simpul tujuan (1-6): ";
+    cin >> end;
+    
+    cout << "Rute " << start << "-" << end << " = ";
+
+
+    FindRoute(start, end, Rute);
+    
+    cout << " dengan beban minimum " << Beban[start - 1][end - 1] << endl;
 
     return 0;
 }
